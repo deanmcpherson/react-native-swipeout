@@ -70,6 +70,7 @@ var Swipeout = React.createClass({
   mixins: [tweenState.Mixin]
 , getDefaultProps: function() {
     return {
+      onOpen: function(sectionID, rowID) {console.log('onOpen: '+sectionID+" "+rowID)},
       rowID: -1,
       sectionID: -1,
     }
@@ -92,21 +93,19 @@ var Swipeout = React.createClass({
 , componentWillMount: function() {
     this._panResponder = PanResponder.create({
       onStartShouldSetPanResponder: (event, gestureState) => true,
-      onMoveShouldSetPanResponder: (event, gestureState) => !(gestureState.dx === 0 || gestureState.dy === 0),
+      onMoveShouldSetPanResponder: (event, gestureState) => !(Math.abs(gestureState.dx) < 1 || Math.abs(gestureState.dy) < 1),
       onPanResponderGrant: this._handlePanResponderGrant,
       onPanResponderMove: this._handlePanResponderMove,
       onPanResponderRelease: this._handlePanResponderEnd,
       onPanResponderTerminate: this._handlePanResponderEnd,
-      onShouldBlockNativeResponder: (event, gestureState) => true,
+      onShouldBlockNativeResponder: (event, gestureState) => false,
     });
   }
 , componentWillReceiveProps: function(nextProps) {
     if (nextProps.close) this._close()
   }
 , _handlePanResponderGrant: function(e: Object, gestureState: Object) {
-    if(this.props.onOpen){
-      this.props.onOpen(this.props.sectionID, this.props.rowID)
-    }
+    this.props.onOpen(this.props.sectionID, this.props.rowID)
     this.refs.swipeoutContent.measure((ox, oy, width, height) => {
       this.setState({
         btnWidth: (width/5),
@@ -220,24 +219,24 @@ var Swipeout = React.createClass({
     var limit = -this.state.btnsRightWidth
     if (posX > 0) var limit = this.state.btnsLeftWidth
 
-    var styleLeftPos = {
+    var styleLeftPos = StyleSheet.create({
       left: {
         left: 0,
         overflow: 'hidden',
         width: Math.min(limit*(posX/limit), limit),
       }
-    }
-    var styleRightPos = {
+    })
+    var styleRightPos = StyleSheet.create({
       right: {
         left: Math.abs(contentWidth + Math.max(limit, posX)),
         right: 0,
       }
-    }
-    var styleContentPos = {
+    })
+    var styleContentPos = StyleSheet.create({
       content: {
         left: this._rubberBandEasing(posX, limit),
       }
-    }
+    })
 
     var styleContent = [styles.swipeoutContent]
     styleContent.push(styleContentPos.content)
